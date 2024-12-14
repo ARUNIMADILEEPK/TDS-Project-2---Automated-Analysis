@@ -57,7 +57,7 @@ def generate_story_with_ai(summary_data=None, analysis=None, use_summary=True):
     if use_summary:
         if not summary_data:
             raise ValueError("Summary data is required for story generation.")
-        prompt = f"Generate a story based on the following data insights: {summary_data}"
+        prompt = f"Generate a short story in 100 words based on the following data insight and then a adetailed analysis with a seperate heading: {summary_data}"
     else:
         if not analysis:
             raise ValueError("Analysis data is required for detailed analysis.")
