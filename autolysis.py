@@ -53,7 +53,7 @@ def generate_story_with_ai(summary_data=None, analysis=None, use_summary=True):
         if not summary_data:
             #logger.error("Summary data is required for story generation.")
             raise ValueError("Summary data is required for story generation.")
-        prompt = f"Generate a short story in 100 words based on the following data insight and then a adetailed analysis with a seperate heading: {summary_data}"
+        prompt = f"Write a detailed story about the dataset and its analysis. Briefly describe the dataset received, the analysis performed (including charts and techniques used), key insights discovered, and the practical implications or recommendations based on these findings. Here is the analysis summary: {summary_data}"
     else:
         if not analysis:
             #logger.error("Analysis data is required for detailed analysis.")
