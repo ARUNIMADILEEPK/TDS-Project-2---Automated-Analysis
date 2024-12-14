@@ -1,65 +1,62 @@
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.12"
 # dependencies = [
 #   "pandas",
 #   "matplotlib",
 #   "seaborn",
 #   "httpx",
+#   "platformdirs",
+#   "python-dotenv",
+#   "rich",
 #   "chardet"
 # ]
 # ///
 
 import os
 import sys
+from dotenv import load_dotenv
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import httpx
 import chardet
+import logging
 from pathlib import Path
 
-import os
+# Load environment variables from .env file
+load_dotenv()
 
 def get_ai_proxy_token():
     """
-    Retrieve the AI Proxy token from an environment variable.
+    Retrieve the AI Proxy token from environment variables.
     """
-    api_token = os.getenv("AIPROXY_TOKEN")
-    if not api_token:
-        raise ValueError("AIPROXY_TOKEN environment variable is not set.")
-    return api_token
-
+    api_url = os.getenv("API_URL")
+    token = os.getenv("AIPROXY_TOKEN")
+    print(token)
+    if not token:
+        raise ValueError("AI Proxy token is not set. Please add it to your .env file.")
+    return token
 
 def generate_story_with_ai(summary_data=None, analysis=None, use_summary=True):
     """
     Generate a story or detailed analysis using GPT-4o-Mini via AI Proxy.
-
-    Parameters:
-        summary_data (str): Data insights to generate a story.
-        analysis (str): Detailed analysis data.
-        use_summary (bool): If True, uses summary_data for story; otherwise, uses analysis for detailed analysis.
-
-    Returns:
-        str: Generated story or analysis.
     """
-    print("Generating story with AI...")
+    #logger.info("Generating story or analysis with AI...")
     token = get_ai_proxy_token()
-    if not token:
-        raise ValueError("AI Proxy token is required.")
-
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    # Decide which prompt to use
     if use_summary:
         if not summary_data:
+            #logger.error("Summary data is required for story generation.")
             raise ValueError("Summary data is required for story generation.")
         prompt = f"Generate a short story in 100 words based on the following data insight and then a adetailed analysis with a seperate heading: {summary_data}"
     else:
         if not analysis:
+            #logger.error("Analysis data is required for detailed analysis.")
             raise ValueError("Analysis data is required for detailed analysis.")
         prompt = f"Provide a detailed analysis based on the following data summary: {analysis}"
 
@@ -69,21 +66,22 @@ def generate_story_with_ai(summary_data=None, analysis=None, use_summary=True):
             {"role": "system", "content": "You are an AI assistant."},
             {"role": "user", "content": prompt}
         ],
-        "max_tokens": 300,
+        "max_tokens":2000,
     }
 
     try:
         response = httpx.post(url, json=payload, headers=headers, timeout=30.0)
-        print(f"Response Status Code: {response.status_code}")
+        #logger.debug(f"AI API Response Status Code: {response.status_code}")
         if response.status_code == 200:
-            return response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response text found.")
+            content = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response text found.")
+            #logger.debug(f"AI API Response Content: {content}")
+            return content
         else:
-            print(f"Error: {response.status_code}, {response.text}")
+            #logger.error(f"AI API Error: {response.status_code}, {response.text}")
             return "Error generating story or analysis."
     except Exception as e:
-        print(f"Error communicating with AI Proxy: {e}")
+        #logger.exception("Error communicating with AI Proxy.")
         return "Error generating story or analysis."
-
 
 def load_data(file_path):
     """
@@ -211,4 +209,3 @@ if __name__ == "__main__":
         print("Usage: uv run autolysis.py <csv_file_path>")
     else:
         analyze_csv(sys.argv[1])
-
